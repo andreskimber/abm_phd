@@ -3,6 +3,8 @@
 ; Currently farms are not so much settlements, but more like farming plots, that need to be moved. for now at least keep as is.
 ; Should add maybe a breed of agents that are settlements that try to have fields near them and move, when no more are available
 
+;;;; siia hakkan gis asju lisama kuni izalt koodi tagasi saan ;;;;;;
+
 extensions [
   csv
   profiler
