@@ -110,7 +110,7 @@ to setup
   setup-available-patches
   visualise
   reset-ticks
-  set year -1800 ; change according to reveals data that is currently used
+  set year -2900 ; change according to reveals data that is currently used
   report-reveals-data
   set all-harvested-patches []
   set pop []
@@ -124,7 +124,7 @@ to setup
 end
 
 to go
-  if not any? turtles OR year = 50 [ ; OR no-room-death > 5 ; OR [yield-multiplier] of last available-patches != 6 ; change end date according to reveals data being used
+  if not any? turtles OR year = 450 [ ; OR no-room-death > 5 ; OR [yield-multiplier] of last available-patches != 6 ; change end date according to reveals data being used
     stop
   ]
 ;  if year = -1600 [ set pop-limit pop-limit * 3 ] ; just testing (26.01.2020) to see if rapid changes in population affect land cover, and result in validation data
@@ -918,7 +918,7 @@ CHOOSER
 visualisation
 visualisation
 "land-cover" "occupation" "fallow" "no-visualisation"
-3
+0
 
 PLOT
 830
@@ -1030,7 +1030,7 @@ SWITCH
 350
 plots-on?
 plots-on?
-0
+1
 1
 -1000
 
@@ -1209,7 +1209,7 @@ pop-limit
 pop-limit
 1
 9000
-9000.0
+297.0
 1
 1
 NIL
@@ -1510,7 +1510,7 @@ base-yield-multiplier
 base-yield-multiplier
 0
 20
-7.0
+8.0
 1
 1
 seeds
