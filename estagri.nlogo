@@ -1,85 +1,85 @@
 ;; Estonian Late Stone Age - Early Iron Age (2900 BC - 450 AD) agriculture model
+;; Author: Andres Kimber
+;; version:
+;; date:
+;; Netlogo version: 6.1.1
+;; data necessary to run it:
 
 ; Currently farms are not so much settlements, but more like farming plots, that need to be moved. for now at least keep as is.
 ; Should add maybe a breed of agents that are settlements that try to have fields near them and move, when no more are available
 
-;;; see on master versioon ;;;;;;;
-
 extensions [
   csv
   profiler
-  gis
 ]
-
 breed [
   farms farm
 ]
-globals [
-  new-farms-number
-  population
-  population2
-  population3
+globals [  ;; IR: I like the declarations of data type you did for bool, you should do it for all globals, use: bool, int, float, string, list, turtleset, patchset etc
+  new-farms-number          ; integer. number of farms to be created in growth-marry procedure
+  population                ; comments
+  population2               ; comments
+  population3               ; comments...
   population3-remainder
-  available-patches ; patches that are (1) suitable for agriculture, (2) not occupied and (3) not in fallow
-  fallowing-patches ; list of patches that are in fallow
-  year
-  open-reveals ; proportion of open land from REVEALS model
-  open-reveals-value ; open-reveals reported as list and this transforms it into a single value
+  available-patches         ; patches that are (1) suitable for agriculture, (2) not occupied and (3) not in fallow
+  fallowing-patches         ; list. patches that are in fallow
+  year                      ; integer. current year - is BC
+  open-reveals              ; proportion of open land from REVEALS model
+  open-reveals-value        ; open-reveals reported as list and this transforms it into a single value
   forest-reveals
   forest-reveals-value
   agrarian-reveals
   agrarian-reveals-value
   no-room-death
-  all-harvested-patches ; list of number of harvested patches at the end of farms life. for calculating mean number of patches used by an agent during its lifetimes
+  all-harvested-patches     ; list of number of harvested patches at the end of farms life. for calculating mean number of patches used by an agent during its lifetimes
   mean-required-patches
-  nofood-death ; number of agents who have died because of no food
-  age-death ; number of agents who have died because of old age
-  age-at-death ; age of the agent when it dies
-  pop
-  pop-growth-rate ; pop growth rate during current tick
-  pop-growth-rate-list ; list of pop growth rates of all ticks
-  pop-density ; population density of people per square kilometer (per/km2) during current tick
-  pop-density-list ; list of pop density of all ticks
-  fertile-farms ; farms that have enough food and correct age for sending out and offspring to make new farm. not a good name. their are no giving birth to children, but marrying them off
+  nofood-death              ; number of agents who have died because of no food
+  age-death                 ; number of agents who have died because of old age
+  age-at-death              ; age of the agent when it dies
+  pop                       ; list. number of farms during current and previous tick
+  pop-growth-rate           ; pop growth rate during current tick
+  pop-growth-rate-list      ; list of pop growth rates of all ticks
+  pop-density               ; population density of people per square kilometer (per/km2) during current tick
+  pop-density-list          ; list of pop density of all ticks
+  fertile-farms             ; list. farms with enough food and suitable age for sending out and offspring to make new farm. not a good name. they are not giving birth to children, but marrying them off
   usable-patches
-  suitable-patches ; patches with good enough yield-multiplier to food a farm
-  soilmap
+  suitable-patches          ; patches with good enough yield-multiplier to food a farm
 ]
 
 patches-own [
-  occupied ; Boolean. records if there are any turtles on the patch
-  availability ; Boolean. TRUE if occupied and fallow FALSE
-  occupation-frequency ; how many times has the resource of patch been harvested on
-  years-of-fallowing ; years how long the patch has been in fallow
-  in-fallow ; is the patch in fallow at the moment
-  original-color ; the original color of a patch
-  land-cover-type ; defines land use type (forest, open land, field) for each patch.
-  yield-multiplier ; how many seeds you get from sowing one seed
+  occupied                  ; Boolean. records if there are any turtles on the patch
+  availability              ; Boolean. TRUE if occupied and fallow FALSE
+  occupation-frequency      ; how many times has the resource of patch been harvested on
+  years-of-fallowing        ; years how long the patch has been in fallow
+  in-fallow                 ; is the patch in fallow at the moment
+  original-color            ; the original color of a patch
+  land-cover-type           ; defines land use type (forest, open land, field) for each patch.
+  yield-multiplier          ; how many seeds you get from sowing one seed
   original-yield-multiplier ; the initial yield multiplier before farming
-  ;sown-seed ; amount of seed (kg) that has been sown on the patch
-  soil-suitability ; suitability of the soil for agriculture. Based on soil map and relevant references in general_notes.md
-  year-of-harvest ; number years the patch has been harvested in a row
-  required-fallow ; number of years required for a patch to recover its initial fertility. will grow by one year with every fallow period. just testing (21.01.2020)
-  drag
+  ;sown-seed                ; amount of seed (kg) that has been sown on the patch
+  soil-suitability          ; suitability of the soil for agriculture. Based on soil map and relevant references in general_notes.md
+  year-of-harvest           ; number years the patch has been harvested in a row
+  required-fallow           ; number of years required for a patch to recover its initial fertility. will grow by one year with every fallow period. just testing (21.01.2020)
+  drag                      ; comments...
 ]
 
 farms-own [
-  storage ; amount of grain currently owned by a farm; should remove old storage (like in anasazi model)?
-  max-storage ; maximum amount of grain a farm can have stored. is it particularly necessary?
-  nofood ; how many ticks have they been without food
-  age
-  moves ; number of times the farm has changed location
-  harvested-patches ; a list of all patches where the farm has harvested. farm will prefer to harvest patches it has harvested before
+  storage                   ; integer. amount of grain currently owned by a farm; should remove old storage (like in anasazi model)?
+  max-storage               ; integer. maximum amount of grain a farm can have stored. is it particularly necessary?
+  nofood                    ; integer. how many ticks have they been without food
+  age                       ; integer. age of a farm
+  moves                     ; integer. number of times the farm has changed location
+  harvested-patches         ; list. patches where the farm has harvested. farm will prefer to harvest patches it has harvested before
   ;best-patches
-  people
-  grain-need ; farms' yearly need of grain in kg. caloric need + next years seed
-  seed ; grain in kg needed for sowing. part of storage
-  sown-seed ; amount of seed that was sown
-  crop ; amount of grain (kg) that the farm harvested last time
-  offspring ; how many farms has this farm produced
-  reachable-patches ; patches in their "walking" distance
-  my-usable-patches ; patches that are reachable and available
-  distance-to-patches
+  people                    ; integer. number of people in a farm.
+  grain-need                ; integer. farms' yearly need of grain in kg. caloric need + next years seed
+  seed                      ; integer. grain in kg needed for sowing. part of storage
+  sown-seed                 ; integer. amount of seed that was sown
+  crop                      ; integer. amount of grain (kg) that the farm harvested last time
+  offspring                 ; integer. number of farms this farm has produced
+  reachable-patches         ; patches in their "walking" distance
+  my-usable-patches         ; patches that are reachable and available
+  distance-to-patches       ;; comments...
   nearby
   dist
   target-patch
@@ -90,25 +90,12 @@ to setup
   ca
   reset-ticks
   file-close-all
-;  set soilmap gis:load-dataset "soilmap_test.asc"
-;  ;gis:set-world-envelope-ds gis:envelope-of soilmap
-;  ;show-data
-;  let mx gis:maximum-of soilmap
-;  ask patches [
-;    set yield-multiplier ( gis:raster-sample soilmap self )
-;    ifelse yield-multiplier > 0 [
-;      set pcolor scale-color orange yield-multiplier mx 0
-;    ]
-;    [
-;      set pcolor blue
-;    ]
-;  ]
   ifelse soils? [ make-soils ] [ make-plain ] ; dependent on the switch, patches have either 4 different type of soils or are homogenous
   create-farms initial-number-farms [ ; teha eraldi funktsiooniks
     set shape "house"
     set size 1
     set storage 0
-    set age one-of (range 15 30)
+    set age 15 + random 15
     setxy random max-pxcor + 1 random max-pycor + 1
     set offspring 0
     set harvested-patches []
@@ -117,19 +104,27 @@ to setup
   ask farms [
     calculate-grain-need
     set storage grain-need
-    record-occupation
-    check-death
+   ; record-occupation ; not necessary ; AK: necessary for sort-available-patches, but could be replaced there.
+    set age-at-death [] ; replaced check-death
   ]
-  list-available-patches
+  setup-available-patches
   visualise
   reset-ticks
-  set year -2900
+  set year -2900 ; change according to reveals data that is currently used
   report-reveals-data
-  calculate-pop-density
+  set all-harvested-patches []
+  set pop []
+  set pop-growth-rate-list []
+  set pop-density-list []
+  set pop-density ( count farms * people-per-farm ) /  (( count patches * 3 ) / 100 ) ; people per km2. patch size is 3 ha.
+  ; pop-density = ( number of farms * number of people in a farm ) / (( number of patches * 3 = number of hectares because one patch is 3 ha )  / 100 (because there are 100 h in 1 km2) )
+  set pop-density-list lput pop-density pop-density-list
+  set fallowing-patches []
+  set fertile-farms []
 end
 
 to go
-  if not any? turtles OR year = 450 [ ; OR no-room-death > 5 ; OR [yield-multiplier] of last available-patches != 6
+  if not any? turtles OR year = 450 [ ; OR no-room-death > 5 ; OR [yield-multiplier] of last available-patches != 6 ; change end date according to reveals data being used
     stop
   ]
 ;  if year = -1600 [ set pop-limit pop-limit * 3 ] ; just testing (26.01.2020) to see if rapid changes in population affect land cover, and result in validation data
@@ -145,25 +140,20 @@ to go
     record-occupation ; check if still necessary function (18.02.20)
   ]
   fallow
-  list-available-patches ; used here for sorting the list.
+  sort-available-patches ; used here for sorting the list.
   visualise
   pop-growth
   calculate-pop-density
   increase-calories-from-grain
   report-reveals-data
   set year year + 1
+ ; ask patch 45 12 [print yield-multiplier] ;; Testing
   tick
-end
-
-to show-data
-  gis:paint soilmap 5
-  gis:set-drawing-color red
 end
 
 ;;; Farm procedures ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 to harvest-farm
-  if ticks = 1 [ set harvested-patches [] ]
   ifelse storage > seed [
     set storage storage - seed
     set sown-seed seed
@@ -172,13 +162,15 @@ to harvest-farm
     set storage 0
   ]
   ; not add randomness at the moment (16.12). Find parameter values that result in  outcome for model
-  let crop-simple sown-seed * [ yield-multiplier ] of patch-here ; initial calculation of crop
+  set crop sown-seed * [ yield-multiplier ] of patch-here ; initial calculation of crop ; enne oli see let crop-simple
   ; actual crop will be a random value from a normal distribution with a mean of "crop" and standard deviation of 25% of "crop". This is due to weather variability. From Baum 2016, table 3. Weather based variability could be same for all agents.
-  set crop round ( random-normal crop-simple ( 0.25 * crop-simple ) )
+  ;set crop round ( random-normal crop-simple ( 0.25 * crop-simple ) )
   set storage storage + crop
   if storage > max-storage [ set storage max-storage ]
-  set harvested-patches lput patch-here harvested-patches ; for farming memory
-  set harvested-patches remove-duplicates harvested-patches ; could combined with adding new item. or not add if current patch is already present in list.
+  if member? patch-here harvested-patches = FALSE [
+    set harvested-patches lput patch-here harvested-patches ; for farming memory
+  ]
+  ;set harvested-patches remove-duplicates harvested-patches ; could combined with adding new item. or not add if current patch is already present in list.
   ask patch-here [
     set land-cover-type "agrarian"
     set year-of-harvest year-of-harvest + 1
@@ -187,6 +179,7 @@ to harvest-farm
 end
 
 to eat
+  let food grain-need - seed
   ifelse storage >= grain-need - seed [
     set storage storage - ( grain-need - seed ) ; if farm has enough storage it will eat it yearly caloric need and wont eat the next years' seed
   ][
@@ -197,27 +190,38 @@ to eat
     ]
   ]
 end
+to eat2
+  ; I'm trying to figure it out here
+  ifelse storage > grain-need
+  [set storage storage - grain-need
+    if storage < seed [set seed seed - storage]
+  ]
 
-to list-available-patches
-  ; at setup, create an empty list called available-patches and add into it all patches that are suitable for agriculture and not in fallow or occupied. Then sort the list in an increasing order based on value of multiplier of patches.
-  ; at every tick sort the patches again.
-  ifelse ticks = 0 [
-   set available-patches []
+  [set storage 0]
+end
+
+to setup-available-patches
+  set available-patches []
    ask patches with [soil-suitability != "Not suitable"] [ ; adding only patches that have suitability for agriculture
       if occupied = FALSE AND in-fallow = FALSE  [ ; AND soil-suitability != "Not suitable" ; think through the soil suitability thing
        set available-patches lput self available-patches
      ]
    ]
-    set available-patches sort-by [ [ a b ] -> [ yield-multiplier ] of a < [ yield-multiplier ] of b ] available-patches ; sorts patches in an increasing order based on value of multiplier
+    set available-patches sort-by [ [ a b ] -> [ yield-multiplier ] of a < [ yield-multiplier ] of b ] available-patches
+end
+
+to sort-available-patches ; should change to sort-available-patches
+  ; at setup, create an empty list called available-patches and add into it all patches that are suitable for agriculture and not in fallow or occupied.
+  ; Then sort the list in an increasing order based on value of multiplier of patches.
+  ; at every tick sort the patches again.
+   ; sorts patches in an increasing order based on value of multiplier
     ; list should be shortened for model speed. Could be done by selecting random 20% values from the list.
-  ][
     set available-patches sort-by [ [ a b ] -> [ yield-multiplier ] of a < [ yield-multiplier ] of b ] available-patches ; needed here for move-farm2 procedure, in case there are no suitable patches in search radius
-  ]
 end
 
 to select-target-patch
   set my-usable-patches [] ; empties the list so that every farm can make their own
-  set my-usable-patches filter [ x -> [ distance myself ] of x < 5 AND [ yield-multiplier ] of x * [ seed ] of self > [ grain-need ] of self ] available-patches
+  set my-usable-patches filter [ x -> [ distance myself ] of x < 10 AND [ yield-multiplier ] of x * [ seed ] of self > [ grain-need ] of self ] available-patches
   ; from available-patches filters the ones in a predefined radius and the ones which can produce enough crop to satisfy the grain-need
   ; this takes long time, because searches from all available-patches which is a long list. Should optimise!
   ifelse length my-usable-patches != 0 [
@@ -229,8 +233,8 @@ to select-target-patch
     ; what to do when there are no suitable patches in search radius?
     ; At the moment moves to best available patch, no matter the distance. But that is actually a great reward, with no downside. Not sure that is right here.
     ifelse length available-patches != 0 [
-      ;list-available-patches ; used here for sorting the the list. no need to do it on go procedure, because this is the only instance its used. Cannot be used here. Makes every farm compile the list at tick 0
-      set target-patch last available-patches
+      ;sort-available-patches ; used here for sorting the the list. no need to do it on go procedure, because this is the only instance its used. Cannot be used here. Makes every farm compile the list at tick 0
+      set target-patch item random length available-patches available-patches
     ][
       ; if no patch available then farm will die
       set no-room-death no-room-death + 1
@@ -246,7 +250,6 @@ to select-target-patch
 end
 
 to move-farm2
-  if ticks = 0 [ set fallowing-patches [] ]
   if [ yield-multiplier ] of patch-here * seed < grain-need  [ ; AND [ yield-multiplier ] of last available-patches * seed > grain-need
                                                                ; AND ... part could check, if there are even any suitable patches available before going forward
     ask patch-here [ ; setting the current patch up for fallowing (before the farms leaves or dies)
@@ -267,7 +270,7 @@ to move-farm2
 end
 
 to move-farm
-  if ticks = 0 [ set fallowing-patches [] ]
+  ;if ticks = 0 [ set fallowing-patches [] ]
   if [ yield-multiplier ] of patch-here * seed < grain-need [
 
    ; should compare best-patches agent-set with harvested-patches list and prefer the ones previously harvested. could not get it working. filter? function did not work. maybe should make empty patches and global list instead,
@@ -308,7 +311,10 @@ to calculate-grain-need ; farms' yearly need of grain in kg
  ; + ( seed for next years' sowing  * calories-from-grain / 100 )
   ; seed amount (550 kg) derived from Tarvel 1972, 47-48. look at notes file. alele poole vähem. 351 võetud ETRA lk 339. vt märkmeid. arvestatud, et üks patch on 3 ha. ehk 117 * 3 = 351. kuna 25% läks maksudeks siis võiks olla hoopis 90*1.3*3*0.75 = 264
   ; otsida kust see 25% maksudeks on võetud
-  set seed 264 * calories-from-grain / 100
+  set seed 200 ; * calories-from-grain / 100 ; see abm_notes chapter külvihulk
+  ; seedi arvutamine siis pisut tagurpidi. peaks arvesse võtma hoopis inimeste hulga ja pinnaste keskmise saagikuse ja sellest tulenevalt vaatama palju seemet vaja on.
+  ; 2000*365/100/3500 = 2.085
+  ; set grain-need round( people * calories-from-grain * 2.085 + seed
   set grain-need round( people * 2000 * 365 * calories-from-grain / 100 / 3500 + seed )
   set max-storage grain-need * 3
 end
@@ -347,7 +353,7 @@ to growth-fission
 end
 
 to count-all-harvested-patches
-  if ticks = 0 [ set all-harvested-patches [] ]
+  if ticks = 0 [ set all-harvested-patches [] ] ; move that to setup
   ifelse length all-harvested-patches != 0 [ ; this if procedure could be replaced by just "mean all-harvested-patches * count farms" in the next if. Add value 1 to list at setup to avoid division by zero
       set mean-required-patches mean all-harvested-patches
     ][
@@ -363,9 +369,11 @@ to growth-marry
   ][
    set new-farms-number length fertile-farms / 2 + one-of [ -0.5 0.5 ] ; if length of fertile farms is uneven, then will create farms equal to if the length was even or add one more to that
   ]
-  if ( length available-patches - ( mean-required-patches * count farms ) ) / mean-required-patches > length fertile-farms / 2 [
+  ;if ( length available-patches - ( mean-required-patches * count farms + mean-required-patches * 10 * count farms) ) / ( mean-required-patches * 11) >= length fertile-farms / 2 [ ; 10 korrutamine on see kui palju maad lisaks põllule vajatakse
   ; this will only let new farms born, if there is enough room for them, based on how many farms are there at the moment and how much land does one farm need on average.
-  ; this eliminates huge peaks in population, but also assumes quite good global knowledge of the farms. In order for this to work properly, should add an option to have less new farms than half of fertile farms
+  ; this eliminates huge peaks in population, but also assumes quite good (impossible?) global knowledge of the farms.
+  ; In order for this to work properly, should add an option to have less new farms than half of fertile farms. This way, if there is not room for fertile-farms/2 new farms,
+  ; then at least those could still born for whom there is space. if there is space for 4 but fertile-farms/2 = 6, then the 4 could still be born. At the moment in this case no new farms are bo
    create-farms new-farms-number [
     new-farm-settings
     ]
@@ -374,20 +382,20 @@ to growth-marry
      set offspring offspring + 1
     ]
    ]
-  ]
+  ;]
 end
 
 to list-fertile-farms
-  if ticks = 0 [ set fertile-farms [] ]
   ask farms [
-    ifelse storage >= grain-need * 1.5 AND age > 30 AND age < 60 AND offspring <= 10 [
+    if storage >= grain-need * 1.5 AND age > 32 AND age < 60 AND offspring <= 10 AND not member? self fertile-farms [
      set fertile-farms lput self fertile-farms
-    ][
-     if member? self fertile-farms [
-       set fertile-farms remove self fertile-farms
-      ]
     ]
-    set fertile-farms remove-duplicates fertile-farms
+;      [
+;     if member? self fertile-farms [
+;       set fertile-farms remove self fertile-farms
+;      ]
+;    ]
+;    set fertile-farms remove-duplicates fertile-farms
   ]
 end
 
@@ -423,19 +431,16 @@ to new-farm-settings
   set crop 0
   set reachable-patches [] ; bad names. need to change
   set usable-patches []
-  setxy random max-pxcor + 1 random (0.52 * max-pycor) + 1 ; causes some new farms to go the unsuitable area for first year.
+  setxy random max-pxcor + 1 random max-pycor + 1 ; causes some new farms to go the unsuitable area for first year.
   ; could make it so that each new farm would settle near its parents
 end
 
-to check-death
+to check-death ;; look into dying age/4
   ; farm will die if it has not had any food for two consecutive ticks
   ; when farm reaches age 30 it will have 5% chance of dying during every next tick
-  ifelse ticks = 0 [
-    set age-at-death []
-  ][
    ifelse storage = 0 [ set nofood nofood + 1 ] [ set nofood 0 ]
    set age age + 1
-   if nofood >= 2 OR ( age >= 25 AND random 100 < age / 4 ) [ ; combined both dying opportunities (starving and aging) into one if statement (19.01.20)
+   if nofood >= 2 OR age >= 25 AND random 100 < age / 4 [ ; combined both dying opportunities (starving and aging) into one if statement (19.01.20)
      ask patch-here [
         set land-cover-type "open"
         set in-fallow TRUE
@@ -454,18 +459,9 @@ to check-death
      ]
      die
    ]
-  ]
 end
 
 to calculate-pop-density
-  if ticks = 0 [
-    set pop []
-    set pop-growth-rate-list []
-    set pop-density-list []
-    set pop-density ( count farms * people-per-farm ) /  (( count patches * 3 ) / 100 ) ; people per km2. patch size is 3 ha.
-    ; pop-density = ( number of farms * number of people in a farm ) / (( number of patches * 3 = number of hectares because one patch is 3 ha )  / 100 (because there are 100 h in 1 km2) )
-    set pop-density-list lput pop-density pop-density-list
-  ]
   set pop lput count farms pop
   if length pop > 2 [ set pop remove-item 0 pop ] ; no need for the list to be longer
   if length pop = 2 [
@@ -475,7 +471,7 @@ to calculate-pop-density
       set pop-growth-rate-list remove-item 0 pop-growth-rate-list
     ]
   ]
-  set pop-density ( count farms * people-per-farm ) / (( count patches * 3 ) / 100 )
+  set pop-density ( count farms * people-per-farm ) / (( count patches ) / 100 )
   set pop-density-list lput pop-density pop-density-list
   if length pop-density-list > 100 [ ; looking at pop density of last 100 years
     set pop-density-list remove-item 0 pop-density-list
@@ -489,14 +485,18 @@ to fallow ; grain will start to re-grow if (1) the patch has not been used for a
 ; currently all the soils deplete the same way. should add different depletion characteristics.
 ; For example, (1) something that has lot of grain but depletes quickly and replenishes slowly and (2) something that has less grain, but depletes more slowly and replenishes faster
 ; depletion should be exponential. especially on thin rendzina soils.
-  if ticks = 0 [ set fallowing-patches [] ]
   foreach fallowing-patches [ x -> ask x [
     if year-of-harvest = 0 [ ; added the if procedure so that the years-of-fallowing counter would start one year after the last harvest and not on the year of last harvest.
       ; basically it will just skip adding years-of-fallowing for the first year
       set years-of-fallowing years-of-fallowing + 1
     ]
-    if years-of-fallowing = 1 [ set land-cover-type "open" ]
+    if years-of-fallowing = 1 [
+      set land-cover-type "open"
+    ] ;;;
     set year-of-harvest 0
+    if years-of-fallowing >= 20 [
+      set land-cover-type "forest"
+    ]
     if years-of-fallowing >= precision required-fallow 1 [ ; fallow-period-length
       set in-fallow FALSE
       set land-cover-type "forest" ; forest should grow earlier than just magically appear at the end of fallow. maybe should
@@ -515,24 +515,30 @@ to fallow ; grain will start to re-grow if (1) the patch has not been used for a
   ]
 end
 
-to soil-depletion
-  if soil-suitability = "Good" [
-    set original-yield-multiplier original-yield-multiplier - 0.005 * original-yield-multiplier ; needs to changed, based on data (CENTURY?), so the soils could deteriorate
+to soil-depletion ; no need for original-yield-multiplier
+  ifelse depletion-varied? [
+    if soil-suitability = "Good" [
+    set original-yield-multiplier original-yield-multiplier - 0.002 * original-yield-multiplier ; good soils deteriorate twice as fast. needs to be changed, based on data (CENTURY?), so the soils could deteriorate
     set yield-multiplier original-yield-multiplier
   ]
   if soil-suitability = "Moderate" [
-    set original-yield-multiplier original-yield-multiplier - 0.001 * original-yield-multiplier ; needs to changed, based on data (CENTURY?), so the soils could deteriorate
+    set original-yield-multiplier original-yield-multiplier - 0.001 * original-yield-multiplier
     set yield-multiplier original-yield-multiplier
   ]
   if soil-suitability = "Poor" [
-    set original-yield-multiplier original-yield-multiplier - 0.001 * original-yield-multiplier ; needs to changed, based on data (CENTURY?), so the soils could deteriorate
+    set original-yield-multiplier original-yield-multiplier - 0.001 * original-yield-multiplier
     set yield-multiplier original-yield-multiplier
   ]
+  ][
+    set original-yield-multiplier original-yield-multiplier - 0.001 * original-yield-multiplier
+    set yield-multiplier original-yield-multiplier
+  ]
+
 end
 
 to make-soils ; area sizes based on soil map
   ask patches [ ; too basic way to do it. could be dependent on number of soils slider
-    if pycor >= min-pycor AND pycor <= 0.14 * max-pycor [ set pcolor 24 ;[204 76 2]
+    if pycor <= 0.14 * max-pycor                              [ set pcolor 24 ;[204 76 2]
                                                           set soil-suitability "Good"
 
     ]
@@ -543,7 +549,7 @@ to make-soils ; area sizes based on soil map
     if pycor >= 0.32 * max-pycor AND pycor <= 0.52 * max-pycor [ set pcolor 27 ; [ 254 217 142 ]
                                                           set soil-suitability "Poor"
     ]
-    if pycor >= 0.52 * max-pycor AND pycor <= max-pycor [ set pcolor 29 ; [ 255 255 212 ]
+    if pycor >= 0.52 * max-pycor                               [ set pcolor 29 ; [ 255 255 212 ]
                                                           set soil-suitability "Not suitable"
    ]
    set years-of-fallowing 0
@@ -553,7 +559,7 @@ to make-soils ; area sizes based on soil map
    set required-fallow fallow-period-length
    define-land-cover-type
    define-yield-multiplier
-   define-soil-fertility
+  ; define-soil-fertility
   ]
 
 end
@@ -570,7 +576,7 @@ to make-plain
     set soil-suitability "Moderate"
     define-land-cover-type
     define-yield-multiplier
-    define-soil-fertility
+;    define-soil-fertility
   ]
 
 end
@@ -587,9 +593,9 @@ to define-land-cover-type
   ]
 end
 
-to report-reveals-data
+to report-reveals-data ; avoid opening files with every tick
   ; opens files in the model folder and reads one line each tick. Data in the files represents each landcover class from 2900 BC to 450 AD and is sorted accordingly.
-  file-open "open_reveals.csv"
+  file-open "open_reveals.csv" ; _1800_50
   set open-reveals csv:from-row file-read-line
   set open-reveals-value item 0 open-reveals
   file-open "forest_reveals.csv"
@@ -604,15 +610,15 @@ end
 ;;; Soils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 to define-yield-multiplier
-  set yield-multiplier 10
-  if soil-suitability = "Good" [ set yield-multiplier yield-multiplier * 1.5 ] ; testida kuidagi kui palju parem peab see pinnas olema, et luua reaalseid mustreid vms
-  if soil-suitability = "Moderate" [ set yield-multiplier yield-multiplier * 1 ]
-  if soil-suitability = "Poor" [ set yield-multiplier yield-multiplier * 0.5 ] ; alla kahe seemne peeti väga kehvaks mullaks juba. vt ETRA
-  if soil-suitability = "Not suitable" [ set yield-multiplier 0.1 ]
+  ;set yield-multiplier 8
+  if soil-suitability = "Good" [ set yield-multiplier base-yield-multiplier * 1.5 ] ; testida kuidagi kui palju parem peab see pinnas olema, et luua reaalseid mustreid vms
+  if soil-suitability = "Moderate" [ set yield-multiplier base-yield-multiplier * 1 ]
+  if soil-suitability = "Poor" [ set yield-multiplier base-yield-multiplier * 0.5 ] ; alla kahe seemne peeti väga kehvaks mullaks juba. vt ETRA
+  if soil-suitability = "Not suitable" [ set yield-multiplier base-yield-multiplier * 0.1 ]
   set original-yield-multiplier yield-multiplier
 end
 
-to define-soil-fertility ; parandada need väärtused
+to define-soil-fertility ; parandada need väärtused ;parandada is not a word, no way
   ; on second year the yield drops to about 30% of the first year. if the plot has been cultivated on already for two previous years, then the yield is about 10 times less (here 9) than on first year.
   ; from Ehrmann 2014 fig 4 ja Rösch 2017, 7
   if year-of-harvest = 0 [ set yield-multiplier yield-multiplier ]
@@ -632,9 +638,17 @@ to visualise
   ]
 end
 
-to visualise-occupation
+to visualise-land-cover
+  ask patches [
+    if land-cover-type = "forest" [ set pcolor green ]
+    if land-cover-type = "agrarian" [ set pcolor black ]
+    if land-cover-type = "open" [ set pcolor orange ]
+  ]
+end
+
+to visualise-occupation ; repair!!!
   ; patches will be colored from
-  if sum [ occupation-frequency ] of patches != 0 [ ; did not work (setup produced error) as part of unified visualise procedure with out the if function. probably cannot scale-color from 0 to 0 at setup (tick 0).
+  if max [ occupation-frequency ] of patches != 0 [ ; did not work (setup produced error) as part of unified visualise procedure with out the if function. probably cannot scale-color from 0 to 0 at setup (tick 0).
     let max-color max [occupation-frequency] of patches
     ask patches [ set pcolor scale-color red occupation-frequency 0 max-color ]
     ask farms [ set hidden? true]
@@ -650,13 +664,7 @@ to visualise-fallow
     ]
 end
 
-to visualise-land-cover
-  ask patches [
-    if land-cover-type = "forest" [ set pcolor green ]
-    if land-cover-type = "agrarian" [ set pcolor black ]
-    if land-cover-type = "open" [ set pcolor orange ]
-  ]
-end
+
 
 
 ;;;; Miscellaneous ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -682,11 +690,11 @@ end
 GRAPHICS-WINDOW
 189
 10
-799
-446
+801
+423
 -1
 -1
-7.0
+4.0
 1
 10
 1
@@ -697,9 +705,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-85
+150
 0
-60
+100
 0
 0
 1
@@ -707,15 +715,15 @@ years
 30.0
 
 SLIDER
-6
-111
-178
-144
+5
+126
+177
+159
 initial-number-farms
 initial-number-farms
 0
 100
-32.0
+15.0
 1
 1
 NIL
@@ -756,10 +764,10 @@ NIL
 1
 
 SWITCH
-6
-302
-96
-335
+5
+317
+95
+350
 soils?
 soils?
 0
@@ -838,25 +846,25 @@ PENS
 "default" 1.0 1 -16777216 true "" "if plots-on? [ \nset-histogram-num-bars 10\nset-plot-x-range 0 (max [max-storage] of farms + 1)\nset-plot-pen-interval (max [storage] of farms + 1) / 10\nhistogram [storage] of farms\n]"
 
 SLIDER
-6
-189
-178
-222
+5
+204
+177
+237
 fallow-period-length
 fallow-period-length
 1
 200
-40.0
+30.0
 1
 1
 years
 HORIZONTAL
 
 SLIDER
-6
-149
-178
-182
+5
+164
+177
+197
 people-per-farm
 people-per-farm
 2
@@ -868,10 +876,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-6
-226
-177
-259
+5
+241
+176
+274
 calories-from-grain
 calories-from-grain
 0
@@ -903,14 +911,14 @@ PENS
 "Agrarian" 1.0 0 -16777216 true "" "if plots-on? [ plotxy ticks count patches with [ land-cover-type = \"agrarian\" ] / count patches * 100 ]"
 
 CHOOSER
-4
-341
-177
-386
+3
+356
+176
+401
 visualisation
 visualisation
 "land-cover" "occupation" "fallow" "no-visualisation"
-3
+0
 
 PLOT
 830
@@ -1016,13 +1024,13 @@ NIL
 1
 
 SWITCH
-96
-302
-186
-335
+95
+317
+185
+350
 plots-on?
 plots-on?
-0
+1
 1
 -1000
 
@@ -1047,10 +1055,10 @@ PENS
 "Poor soil" 1.0 0 -6459832 true "" "if plots-on? and ticks > 0 [ plot mean [ yield-multiplier ] of patches with [ soil-suitability = \"Poor\" ]]"
 
 SLIDER
-6
-262
-175
-295
+5
+277
+176
+310
 max-calories-from-grain
 max-calories-from-grain
 10
@@ -1058,7 +1066,7 @@ max-calories-from-grain
 80.0
 1
 1
-NIL
+%
 HORIZONTAL
 
 MONITOR
@@ -1187,21 +1195,21 @@ MONITOR
 494
 694
 MHP * farms
-mean-required-patches * count farms
+(mean-required-patches + mean-required-patches * 10) * count farms
 1
 1
 11
 
 SLIDER
-5
-437
-172
-470
+4
+452
+171
+485
 pop-limit
 pop-limit
 1
 9000
-7567.0
+297.0
 1
 1
 NIL
@@ -1462,10 +1470,10 @@ PENS
 "2" 1.0 0 -14070903 true "" "if plots-on? [ plot count farms with [ offspring = 2 ] ]"
 
 CHOOSER
-4
-389
-176
-434
+3
+404
+175
+449
 population-growth
 population-growth
 "stable" "fission" "marry"
@@ -1488,12 +1496,40 @@ MONITOR
 160
 693
 Study area in km2
-count patches * 3 / 100
+count patches / 100
 1
 1
 11
 
+SLIDER
+5
+92
+177
+125
+base-yield-multiplier
+base-yield-multiplier
+0
+20
+8.0
+1
+1
+seeds
+HORIZONTAL
+
+SWITCH
+206
+764
+376
+797
+depletion-varied?
+depletion-varied?
+1
+1
+-1000
+
 @#$#@#$#@
+## FILL IN THE INFO ANDRES
+
 ## WHAT IS IT?
 
 (a general understanding of what the model is trying to show or explain)
