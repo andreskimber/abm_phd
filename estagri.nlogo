@@ -431,7 +431,9 @@ to new-farm-settings
   set crop 0
   set reachable-patches [] ; bad names. need to change
   set usable-patches []
-  setxy random max-pxcor + 1 random max-pycor + 1 ; causes some new farms to go the unsuitable area for first year.
+  ;setxy random max-pxcor + 1 random max-pycor + 1 ; causes some new farms to go the unsuitable area for first year.
+  move-to one-of fertile-farms ; added on 03.08.2020
+  ;setxy one-of fertile-farms
   ; could make it so that each new farm would settle near its parents
 end
 
@@ -536,20 +538,20 @@ to soil-depletion ; no need for original-yield-multiplier
 
 end
 
-to make-soils ; area sizes based on soil map
+to make-soils ; area sizes based on a cateogorised soil map of an area of a square around a circle with 25 km radius from the centroid of lake Maardu
   ask patches [ ; too basic way to do it. could be dependent on number of soils slider
-    if pycor <= 0.14 * max-pycor                              [ set pcolor 24 ;[204 76 2]
+    if pycor <= 0.04 * max-pycor                              [ set pcolor 24 ;[204 76 2]
                                                           set soil-suitability "Good"
 
     ]
-    if pycor >= 0.14 * max-pycor AND pycor <= 0.32 * max-pycor [set pcolor 26 ; [ 254 153 41 ]
+    if pycor > 0.04 * max-pycor AND pycor <= 0.30 * max-pycor [set pcolor 26 ; [ 254 153 41 ]
 
                                                           set soil-suitability "Moderate"
     ]
-    if pycor >= 0.32 * max-pycor AND pycor <= 0.52 * max-pycor [ set pcolor 27 ; [ 254 217 142 ]
+    if pycor > 0.30 * max-pycor AND pycor <= 0.42 * max-pycor [ set pcolor 27 ; [ 254 217 142 ]
                                                           set soil-suitability "Poor"
     ]
-    if pycor >= 0.52 * max-pycor                               [ set pcolor 29 ; [ 255 255 212 ]
+    if pycor > 0.42 * max-pycor                               [ set pcolor 29 ; [ 255 255 212 ]
                                                           set soil-suitability "Not suitable"
    ]
    set years-of-fallowing 0
@@ -690,11 +692,11 @@ end
 GRAPHICS-WINDOW
 189
 10
-801
-423
+952
+524
 -1
 -1
-4.0
+5.0
 1
 10
 1
@@ -884,7 +886,7 @@ calories-from-grain
 calories-from-grain
 0
 100
-80.0
+80.83
 1
 1
 %
@@ -918,7 +920,7 @@ CHOOSER
 visualisation
 visualisation
 "land-cover" "occupation" "fallow" "no-visualisation"
-0
+3
 
 PLOT
 830
@@ -1030,7 +1032,7 @@ SWITCH
 350
 plots-on?
 plots-on?
-1
+0
 1
 -1000
 
@@ -1063,7 +1065,7 @@ max-calories-from-grain
 max-calories-from-grain
 10
 100
-80.0
+95.0
 1
 1
 %
@@ -1468,6 +1470,7 @@ true
 PENS
 "1" 1.0 0 -5298144 true "" "if plots-on? [ plot count farms with [ offspring = 1 ] ]"
 "2" 1.0 0 -14070903 true "" "if plots-on? [ plot count farms with [ offspring = 2 ] ]"
+"3" 1.0 1 -14439633 true "" "if plots-on? [ plot count farms with [ offspring = 3 ] ]"
 
 CHOOSER
 3
@@ -1510,7 +1513,7 @@ base-yield-multiplier
 base-yield-multiplier
 0
 20
-8.0
+6.0
 1
 1
 seeds
