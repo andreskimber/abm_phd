@@ -90,7 +90,7 @@ to setup
   ca
   reset-ticks
   file-close-all
-  ifelse soils? [ make-soils ] [ make-plain ] ; dependent on the switch, patches have either 4 different type of soils or are homogenous
+  create-soils
   create-farms initial-number-farms [ ; teha eraldi funktsiooniks
     set shape "house"
     set size 1
@@ -162,6 +162,7 @@ to harvest
       set storage 0
     ]
   ]
+  ; could at an option to sow more seed if soil is not good but farm has more grain available.
   ; not add randomness at the moment (16.12). Find parameter values that result in  outcome for model
   set crop sown-seed * [ yield-multiplier ] of patch-here ; initial calculation of crop ; enne oli see let crop-simple
   ; actual crop will be a random value from a normal distribution with a mean of "crop" and standard deviation of 25% of "crop". This is due to weather variability. From Baum 2016, table 3. Weather based variability could be same for all agents.
@@ -317,7 +318,6 @@ end
 ;  ]
 ;end
 
-
 to calculate-grain-need ; farms' yearly need of grain in kg
  ; calories needed divided by number of calories in one kg
  ; ( number of people in farm (slider) * daily caloric need * days in a year ) * percentage of calories from grain (slider) / 100 (because the slider is in % not 0,...) / kcal in kg of grain (mean of barley, wheat and oats) +
@@ -365,14 +365,14 @@ to growth-fission
   ]
 end
 
-to count-all-harvested-patches
-  if ticks = 0 [ set all-harvested-patches [] ] ; move that to setup
-  ifelse length all-harvested-patches != 0 [ ; this if procedure could be replaced by just "mean all-harvested-patches * count farms" in the next if. Add value 1 to list at setup to avoid division by zero
-      set mean-required-patches mean all-harvested-patches
-    ][
-      set mean-required-patches 1 ; added abritrary value of 1 so there would not be "division by zero" error in the beginning of simulation where no farm has died yet
-    ]
-end
+;to count-all-harvested-patches
+;  if ticks = 0 [ set all-harvested-patches [] ] ; move that to setup
+;  ifelse length all-harvested-patches != 0 [ ; this if procedure could be replaced by just "mean all-harvested-patches * count farms" in the next if. Add value 1 to list at setup to avoid division by zero
+;      set mean-required-patches mean all-harvested-patches
+;    ][
+;      set mean-required-patches 1 ; added abritrary value of 1 so there would not be "division by zero" error in the beginning of simulation where no farm has died yet
+;    ]
+;end
 
 to growth-marry
   list-fertile-farms
@@ -401,7 +401,7 @@ end
 to list-fertile-farms
   set fertile-farms []
   ask farms [
-    if storage >= grain-need * 1.5 AND age > 32 AND age < 60 AND offspring < 10 [
+    if storage >= grain-need * 1.5 AND age > 32 AND age < 60 AND offspring < 8 [
      set fertile-farms lput self fertile-farms
     ]
 ;      [
@@ -552,7 +552,15 @@ to soil-depletion ; no need for original-yield-multiplier
 
 end
 
-to make-soils ; area sizes based on a cateogorised soil map of an area of a square around a circle with 25 km radius from the centroid of lake Maardu
+
+to create-soils
+  if soil-distribution = "collected" [ create-soils-collected ]
+  if soil-distribution = "random" [ create-soils-random ]
+  if soil-distribution = "all-moderate" [ create-soils-random-all-moderate ]
+end
+
+
+to create-soils-collected ; area sizes based on a cateogorised soil map of an area of a square around a circle with 25 km radius from the centroid of lake Maardu
   ask patches [ ; too basic way to do it. could be dependent on number of soils slider
     if pycor <= 0.04 * max-pycor                              [ set pcolor 24 ;[204 76 2]
                                                           set soil-suitability "Good"
@@ -580,21 +588,54 @@ to make-soils ; area sizes based on a cateogorised soil map of an area of a squa
 
 end
 
-to make-plain
-  ; create a homogenous area where all patches have grain and growth rate equal to the global max grain
-   ask patches [
-    set pcolor green
-    set years-of-fallowing 0
-    set in-fallow FALSE
-    set occupied FALSE
-    set original-color pcolor
-    set required-fallow fallow-period-length
-    set soil-suitability "Moderate"
-    define-land-cover-type
-    define-yield-multiplier
-;    define-soil-fertility
+to create-soils-random
+  ; creates a random distribution of soils with corrected proportions of suitability
+  ask patches [
+    ifelse random 100 < 57 [
+      set pcolor 29
+      set soil-suitability "Not suitable"
+    ][
+      ifelse random 43 < 4 [
+        set pcolor 24
+        set soil-suitability "Good"
+      ][
+        ifelse random 39 < 27 [
+          set pcolor 26
+          set soil-suitability "Moderate"
+        ][
+          set pcolor 27
+          set soil-suitability "Poor"
+        ]
+      ]
+    ]
+   set years-of-fallowing 0
+   set in-fallow FALSE
+   set occupied FALSE
+   set original-color pcolor
+   set required-fallow fallow-period-length
+   define-land-cover-type
+   define-yield-multiplier
   ]
+end
 
+to create-soils-random-all-moderate
+  ; create an area where all patches have have "Moderate" suitability
+  ask patches [
+    ifelse random 100 < 57 [
+      set pcolor 29
+      set soil-suitability "Not suitable"
+    ][
+      set pcolor 26
+      set soil-suitability "Moderate"
+     ]
+   set years-of-fallowing 0
+   set in-fallow FALSE
+   set occupied FALSE
+   set original-color pcolor
+   set required-fallow fallow-period-length
+   define-land-cover-type
+   define-yield-multiplier
+  ]
 end
 
 ;;; Land cover and REVEALS model data ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -706,11 +747,11 @@ end
 GRAPHICS-WINDOW
 191
 10
-1004
-469
+1201
+583
 -1
 -1
-5.0
+2.0
 1
 10
 1
@@ -721,9 +762,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-160
+500
 0
-89
+281
 0
 0
 1
@@ -778,17 +819,6 @@ G
 NIL
 NIL
 1
-
-SWITCH
-5
-317
-95
-350
-soils?
-soils?
-0
-1
--1000
 
 BUTTON
 99
@@ -870,7 +900,7 @@ fallow-period-length
 fallow-period-length
 1
 200
-30.0
+40.0
 1
 1
 years
@@ -1290,21 +1320,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "if plots-on? and ticks > 0 [ \n  plot [ yield-multiplier ] of last available-patches ]"
 
 MONITOR
-626
-748
-787
-793
-Best patch satisfies grain-need
-mean [ seed ] of farms * [yield-multiplier] of last available-patches >= mean [ grain-need ] of farms
-17
-1
-11
-
-MONITOR
 1701
-166
+160
 1792
-211
+205
 Pop growth rate
 pop-growth-rate
 4
@@ -1466,26 +1485,6 @@ count farms with [ offspring = 2 ]
 1
 11
 
-PLOT
-1644
-483
-1844
-633
-Farms with offsprings
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"1" 1.0 0 -5298144 true "" "if plots-on? [ plot count farms with [ offspring = 1 ] ]"
-"2" 1.0 0 -14070903 true "" "if plots-on? [ plot count farms with [ offspring = 2 ] ]"
-"3" 1.0 1 -14439633 true "" "if plots-on? [ plot count farms with [ offspring = 3 ] ]"
-
 CHOOSER
 3
 404
@@ -1534,37 +1533,15 @@ seeds
 HORIZONTAL
 
 SWITCH
-209
-766
-379
-799
+834
+521
+995
+554
 depletion-varied?
 depletion-varied?
 1
 1
 -1000
-
-MONITOR
-1649
-660
-1846
-705
-NIL
-count farms with [ offspring > 3 ]
-17
-1
-11
-
-MONITOR
-1672
-744
-1880
-789
-NIL
-count farms with [ sown-seed < 0 ]
-17
-1
-11
 
 MONITOR
 841
@@ -1589,10 +1566,10 @@ one-of farms with-max [offspring]
 11
 
 SLIDER
-844
-502
-1011
-535
+833
+487
+995
+520
 search-radius
 search-radius
 5
@@ -1604,14 +1581,35 @@ patches
 HORIZONTAL
 
 CHOOSER
-844
-543
-982
-588
+834
+556
+994
+601
 patch-preference
 patch-preference
 "closest" "best-yield"
 0
+
+MONITOR
+845
+772
+981
+817
+Farms with 8 offspring
+count farms with [ offspring = 8]
+17
+1
+11
+
+CHOOSER
+834
+601
+994
+646
+soil-distribution
+soil-distribution
+"all-moderate" "random" "collected"
+1
 
 @#$#@#$#@
 ## FILL IN THE INFO ANDRES
