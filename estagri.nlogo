@@ -222,12 +222,24 @@ end
 
 to select-target-patch
   set my-usable-patches [] ; empties the list so that every farm can make their own
-  set my-usable-patches filter [ x -> [ distance myself ] of x <= 10 AND [ yield-multiplier ] of x * [ seed ] of self > [ grain-need ] of self ] available-patches
+  set my-usable-patches filter [
+    x -> [ distance myself ] of x <= search-radius AND
+    [ yield-multiplier ] of x * [ seed ] of self > [ grain-need ] of self
+  ] available-patches
+;  set my-usable-patches filter [
+;    x -> [ distance myself ] of x > 20
+;  ] my-usable-patches
+;  if length my-usable-patches != 0 [
+;    ask last my-usable-patches [ set pcolor green ]
+;  ]
   ; from available-patches filters the ones in a predefined radius and the ones which can produce enough crop to satisfy the grain-need
   ; this takes long time, because searches from all available-patches which is a long list. Should optimise!
   ifelse length my-usable-patches != 0 [
-    set my-usable-patches sort-by [ [ a b ] -> [ distance myself ] of a < [ distance myself ] of b ] my-usable-patches ; this way farms will prefer the closest patch. Could test both ways.
-;    set my-usable-patches sort-by [ [ a b ] -> [ yield-multiplier ] of a > [ yield-multiplier ] of b ] my-usable-patches ; this way farms will prefer the best patch
+    ifelse patch-preference = "closest" [
+      set my-usable-patches sort-by [ [ a b ] -> [ distance myself ] of a < [ distance myself ] of b ] my-usable-patches ; this way farms will prefer the closest patch. Could test both ways.
+    ][
+      set my-usable-patches sort-by [ [ a b ] -> [ yield-multiplier ] of a > [ yield-multiplier ] of b ] my-usable-patches ; this way farms will prefer the best patch
+    ]
     set target-patch first my-usable-patches ; moves to the closest patch that produces enough grain
     ;foreach my-usable-patches [x -> ask x [ set pcolor red ] ]
   ][
@@ -444,7 +456,7 @@ to check-death ;; look into dying age/4
   ; when farm reaches age 30 it will have 5% chance of dying during every next tick
    ifelse storage = 0 [ set nofood nofood + 1 ] [ set nofood 0 ]
    set age age + 1
-   if nofood >= 2 OR age >= 30 AND random 100 < age / 5 [ ; combined both dying opportunities (starving and aging) into one if statement (19.01.20)
+   if nofood >= 1 OR age >= 30 AND random 100 < age / 5 [ ; combined both dying opportunities (starving and aging) into one if statement (19.01.20)
      ask patch-here [
         set land-cover-type "open"
         set in-fallow TRUE
@@ -727,7 +739,7 @@ initial-number-farms
 initial-number-farms
 0
 100
-26.0
+10.0
 1
 1
 NIL
@@ -922,7 +934,7 @@ CHOOSER
 visualisation
 visualisation
 "land-cover" "occupation" "fallow" "no-visualisation"
-0
+3
 
 PLOT
 1019
@@ -1016,7 +1028,7 @@ BUTTON
 89
 87
 Profiler
-setup ;; set up the model\nprofiler:start ;; start profiling\nrepeat 10 [ go ] ;; run something you want to measure\nprofiler:stop ;; stop profiling\nprint profiler:report ;; view the results\nprofiler:reset ;; clear the data
+setup ;; set up the model\nprofiler:start ;; start profiling\nrepeat 30 [ go ] ;; run something you want to measure\nprofiler:stop ;; stop profiling\nprint profiler:report ;; view the results\nprofiler:reset ;; clear the data
 NIL
 1
 T
@@ -1034,7 +1046,7 @@ SWITCH
 350
 plots-on?
 plots-on?
-1
+0
 1
 -1000
 
@@ -1575,6 +1587,31 @@ one-of farms with-max [offspring]
 17
 1
 11
+
+SLIDER
+844
+502
+1011
+535
+search-radius
+search-radius
+5
+50
+10.0
+5
+1
+patches
+HORIZONTAL
+
+CHOOSER
+844
+543
+982
+588
+patch-preference
+patch-preference
+"closest" "best-yield"
+0
 
 @#$#@#$#@
 ## FILL IN THE INFO ANDRES
