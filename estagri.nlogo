@@ -73,7 +73,7 @@ farms-own [
   ;best-patches
   people                    ; integer. number of people in a farm.
   grain-need                ; integer. farms' yearly need of grain in kg. caloric need + next years seed
-  seed                      ; integer. grain in kg needed for sowing. part of storage
+  ;seed                      ; integer. grain in kg needed for sowing. part of storage ; seed peaks võrduma grain-need
   sown-seed                 ; integer. amount of seed that was sown
   crop                      ; integer. amount of grain (kg) that the farm harvested last time
   offspring                 ; integer. number of farms this farm has produced
@@ -124,7 +124,7 @@ to setup
 end
 
 to go
-  if not any? turtles OR year = 450 OR [ sown-seed ] of one-of farms < 0 [ ; OR no-room-death > 5 ; OR [yield-multiplier] of last available-patches != 6 ; change end date according to reveals data being used
+  if not any? turtles OR year = 450  [ ; OR no-room-death > 5 ; OR [yield-multiplier] of last available-patches != 6 ; OR [ sown-seed ] of one-of farms < 0 ; change end date according to reveals data being used
     stop
   ]
 ;  if year = -1600 [ set pop-limit pop-limit * 3 ] ; just testing (26.01.2020) to see if rapid changes in population affect land cover, and result in validation data
@@ -324,7 +324,7 @@ to calculate-grain-need ; farms' yearly need of grain in kg
  ; + ( seed for next years' sowing  * calories-from-grain / 100 )
   ; seed amount (550 kg) derived from Tarvel 1972, 47-48. look at notes file. alele poole vähem. 351 võetud ETRA lk 339. vt märkmeid. arvestatud, et üks patch on 3 ha. ehk 117 * 3 = 351. kuna 25% läks maksudeks siis võiks olla hoopis 90*1.3*3*0.75 = 264
   ; otsida kust see 25% maksudeks on võetud
-  set seed 200 ; * calories-from-grain / 100 ; see abm_notes chapter külvihulk
+  ;set seed 200 ; * calories-from-grain / 100 ; see abm_notes chapter külvihulk
   ; seedi arvutamine siis pisut tagurpidi. peaks arvesse võtma hoopis inimeste hulga ja pinnaste keskmise saagikuse ja sellest tulenevalt vaatama palju seemet vaja on.
   ; 2000*365/100/3500 = 2.085
   ; set grain-need round( people * calories-from-grain * 2.085 + seed
@@ -747,11 +747,11 @@ end
 GRAPHICS-WINDOW
 191
 10
-1201
-583
+1004
+459
 -1
 -1
-2.0
+5.0
 1
 10
 1
@@ -762,9 +762,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-500
+160
 0
-281
+87
 0
 0
 1
@@ -928,10 +928,10 @@ SLIDER
 274
 calories-from-grain
 calories-from-grain
-0
-100
-80.0
-1
+10
+90
+50.0
+10
 1
 %
 HORIZONTAL
@@ -1544,10 +1544,10 @@ depletion-varied?
 -1000
 
 MONITOR
-841
-711
-945
-756
+1673
+531
+1777
+576
 max of offspring
 [offspring] of one-of farms with-max [offspring]
 17
@@ -1555,10 +1555,10 @@ max of offspring
 11
 
 MONITOR
-840
-665
-984
-710
+1672
+485
+1816
+530
 farm with max offspring
 one-of farms with-max [offspring]
 17
@@ -1574,7 +1574,7 @@ search-radius
 search-radius
 5
 50
-10.0
+30.0
 5
 1
 patches
@@ -1591,10 +1591,10 @@ patch-preference
 0
 
 MONITOR
-845
-772
-981
-817
+1677
+592
+1813
+637
 Farms with 8 offspring
 count farms with [ offspring = 8]
 17
@@ -1610,6 +1610,21 @@ soil-distribution
 soil-distribution
 "all-moderate" "random" "collected"
 1
+
+SLIDER
+834
+647
+994
+680
+seed
+seed
+50
+300
+200.0
+50
+1
+kg
+HORIZONTAL
 
 @#$#@#$#@
 ## FILL IN THE INFO ANDRES
